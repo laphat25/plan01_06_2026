@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teambuilding Master Plan - 1/6</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfbf7;
+            color: #4a3f35;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(220, 210, 190, 0.5);
+            transition: transform 0.2s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .tab-active {
+            border-bottom: 3px solid #d97706;
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: -9px;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background-color: #e5e7eb;
+        }
+
+        input[type="checkbox"]:checked + span {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- Chosen Palette: Warm Neutrals & Terracotta Accent -->
+<!-- Application Structure Plan: 
+    Ứng dụng được thiết kế theo dạng Dashboard điều hành sự kiện.
+    1. Header: Tổng quan thông số (600 người, 9 đội, 120 phút).
+    2. Navigation: Chuyển đổi giữa 4 góc nhìn: Tổng quan (Dashboard), Vật tư (Logistics), Chuẩn bị (Timeline chuẩn bị), và Thực thi (Timeline ngày chạy).
+    3. Trực quan hóa: Sử dụng Chart.js để biểu diễn phân bổ thời gian và tài lực. 
+    4. Tương tác: Danh sách vật tư có thể click để đánh dấu hoàn thành, các thẻ trò chơi có thể mở rộng để xem chi tiết.
+    Cấu trúc này giúp người dùng không bị ngợp thông tin và dễ dàng chuyển đổi giữa việc 'Lên kế hoạch' và 'Kiểm soát hiện trường'.
+-->
+<!-- Visualization & Content Choices: 
+    - Donut Chart (Chart.js): Hiển thị tỷ trọng thời gian các trò chơi để MC điều phối.
+    - Interactive Timeline: Hiển thị các bước chuẩn bị từ 27/5 đến 1/6.
+    - Checklists: Quản lý 9 bao tải vật tư và đồ dùng chung.
+    - Tournament Bracket (CSS/HTML Grid): Mô phỏng sơ đồ thi đấu kéo co 9 đội.
+    - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. 
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <header class="mb-10 text-center">
+        <h1 class="text-4xl font-extrabold text-amber-900 mb-2 uppercase tracking-tight">Kế Hoạch Master Teambuilding 1/6</h1>
+        <p class="text-lg text-amber-700 italic">"Vui như Don Bosco - Chuẩn như Bách Khoa"</p>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+            <div class="p-4 glass-card rounded-2xl shadow-sm">
+                <span class="block text-sm uppercase font-semibold text-gray-500">Quy mô</span>
+                <span class="text-2xl font-bold text-amber-600">600 Người</span>
+            </div>
+            <div class="p-4 glass-card rounded-2xl shadow-sm">
+                <span class="block text-sm uppercase font-semibold text-gray-500">Đội hình</span>
+                <span class="text-2xl font-bold text-amber-600">9 Nhóm</span>
+            </div>
+            <div class="p-4 glass-card rounded-2xl shadow-sm">
+                <span class="block text-sm uppercase font-semibold text-gray-500">Thời lượng</span>
+                <span class="text-2xl font-bold text-amber-600">120 Phút</span>
+            </div>
+            <div class="p-4 glass-card rounded-2xl shadow-sm">
+                <span class="block text-sm uppercase font-semibold text-gray-500">Setup</span>
+                <span class="text-2xl font-bold text-amber-600">5 Anh Em</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex justify-center space-x-6 mb-8 border-b border-gray-200 text-gray-600">
+        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="pb-3 px-2 tab-active">Tổng Quan</button>
+        <button onclick="switchTab('logistics')" id="btn-logistics" class="pb-3 px-2">Vật Tư</button>
+        <button onclick="switchTab('preparation')" id="btn-preparation" class="pb-3 px-2">Giai Đoạn Chuẩn Bị</button>
+        <button onclick="switchTab('execution')" id="btn-execution" class="pb-3 px-2">Timeline Ngày 1/6</button>
+    </nav>
+
+    <!-- Tab Content: Dashboard -->
+    <section id="tab-dashboard" class="tab-content">
+        <div class="mb-6 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <span class="w-2 h-6 bg-amber-500 rounded-full mr-3"></span>
+                Phân Bổ Thời Gian Sự Kiện (120 Phút)
+            </h2>
+            <p class="text-gray-600 mb-6 italic text-sm">Phần này giúp MC và Điều phối viên nắm bắt nhịp độ chương trình để tránh thời gian chết, đảm bảo không ai bị bỏ lại phía sau.</p>
+            <div class="chart-container">
+                <canvas id="timeDistributionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-card p-6 rounded-3xl">
+                <h3 class="font-bold text-amber-900 mb-4 uppercase">Cơ cấu Trò chơi</h3>
+                <div id="gamesList" class="space-y-4 text-sm">
+                    <!-- Dynamic content via JS -->
+                </div>
+            </div>
+            <div class="glass-card p-6 rounded-3xl">
+                <h3 class="font-bold text-amber-900 mb-4 uppercase">Sơ đồ Kéo co (9 Đội)</h3>
+                <div class="flex flex-col items-center">
+                    <div class="w-full border-2 border-dashed border-amber-200 rounded-xl p-4 text-center">
+                        <p class="text-xs font-semibold text-amber-700 mb-2">TRẬN PLAY-IN (9h45)</p>
+                        <div class="flex justify-center items-center space-x-4">
+                            <span class="bg-white px-3 py-1 rounded shadow text-amber-900">Đội 8</span>
+                            <span class="text-gray-400">vs</span>
+                            <span class="bg-white px-3 py-1 rounded shadow text-amber-900">Đội 9</span>
+                        </div>
+                    </div>
+                    <div class="my-2 text-amber-300 font-bold">↓</div>
+                    <div class="grid grid-cols-2 gap-2 w-full text-xs text-center font-bold text-gray-500">
+                        <div class="bg-amber-50 p-2 rounded">TỨ KẾT 1 & 2</div>
+                        <div class="bg-amber-50 p-2 rounded">TỨ KẾT 3 & 4</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab Content: Logistics -->
+    <section id="tab-logistics" class="tab-content hidden">
+        <div class="p-6 bg-white rounded-3xl shadow-sm border border-gray-100 mb-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <span class="w-2 h-6 bg-green-500 rounded-full mr-3"></span>
+                Danh Mục Mua Sắm & Hậu Cần
+            </h2>
+            <p class="text-gray-600 mb-6 text-sm">Danh sách vật tư được tối ưu cho sân cỏ nhân tạo (chú trọng vệ sinh và an toàn). Hãy tích vào các mục khi đã mua xong.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-3 text-sm uppercase">1. Đồ dùng chung BTC</h3>
+                    <ul class="space-y-2 text-sm" id="generalLogistics"></ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-3 text-sm uppercase">2. Đạo cụ theo 9 Bao Tải (Combo)</h3>
+                    <ul class="space-y-2 text-sm" id="comboLogistics"></ul>
+                </div>
+            </div>
+        </div>
+        <div class="bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-start space-x-4">
+            <span class="text-2xl">⚠️</span>
+            <div class="text-sm text-amber-900">
+                <strong>Lưu ý sân cỏ:</strong> Tuyệt đối phải có 9 tấm bạt lót ở trạm tìm ngọc để không dính bột vào cỏ nhân tạo. Chủ sân sẽ phạt nếu không vệ sinh kỹ.
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab Content: Preparation -->
+    <section id="tab-preparation" class="tab-content hidden">
+        <div class="p-6 bg-white rounded-3xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <span class="w-2 h-6 bg-blue-500 rounded-full mr-3"></span>
+                Tiến Độ Chuẩn Bị (27/5 - 31/5)
+            </h2>
+            <div class="space-y-8 mt-6">
+                <div class="flex space-x-4">
+                    <div class="flex-shrink-0 w-24 text-sm font-bold text-blue-600">NHÓM 1</div>
+                    <div class="flex-grow pb-4 border-b border-gray-100">
+                        <h4 class="font-semibold">Hậu cần & Đạo cụ (4 người)</h4>
+                        <p class="text-xs text-gray-500 mt-1">Mua vật tư, gia công bạt bánh xe, đóng gói 9 bao combo trước 29/5.</p>
+                    </div>
+                </div>
+                <div class="flex space-x-4">
+                    <div class="flex-shrink-0 w-24 text-sm font-bold text-orange-600">NHÓM 2</div>
+                    <div class="flex-grow pb-4 border-b border-gray-100">
+                        <h4 class="font-semibold">Nội dung & Hoạt náo (3 người)</h4>
+                        <p class="text-xs text-gray-500 mt-1">Tập nhảy cử điệu, chuẩn bị playlist nhạc EDM/Don Bosco, chốt kịch bản MC.</p>
+                    </div>
+                </div>
+                <div class="flex space-x-4">
+                    <div class="flex-shrink-0 w-24 text-sm font-bold text-green-600">NHÓM 3</div>
+                    <div class="flex-grow">
+                        <h4 class="font-semibold">Tiền trạm & An ninh (2 người)</h4>
+                        <p class="text-xs text-gray-500 mt-1">Khảo sát sân, liên hệ mượn chóp nấm, thông báo người chơi đi giày thể thao.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab Content: Execution -->
+    <section id="tab-execution" class="tab-content hidden">
+        <div class="p-6 bg-white rounded-3xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold mb-6 flex items-center">
+                <span class="w-2 h-6 bg-red-500 rounded-full mr-3"></span>
+                Dòng Thời Gian Ngày 1/6
+            </h2>
+            <div class="relative pl-8 space-y-8" id="executionTimeline">
+                <!-- Timeline items injected here -->
+            </div>
+        </div>
+    </section>
+
+    <footer class="mt-12 text-center text-gray-400 text-xs">
+        <p>© 2024 Team Building 1/6 - Hệ thống Quản trị Sự kiện Thông minh</p>
+    </footer>
+</div>
+
+<script>
+    // Data Storage
+    const gamesData = [
+        { id: 1, name: "Bánh xe công lý", time: 15, people: "30 người/đội", props: "9 cuộn bạt dứa 8m x 1m" },
+        { id: 2, name: "Kéo co", time: 25, people: "15 người/đội", props: "2 dây thừng lớn" },
+        { id: 3, name: "Nhảy bao bố", time: 10, people: "20 người/đội", props: "18 bao bố" },
+        { id: 4, name: "Truyền nước", time: 10, people: "20 người/đội", props: "Thau nước, ly nhựa, chai đích" },
+        { id: 5, name: "Tìm ngọc", time: 20, people: "20-25 người/đội", props: "Bột mì, kẹo, thau nước, bạt lót" },
+        { id: 6, name: "Chui vòng", time: 10, people: "Cả đội (67 người)", props: "27 vòng Hula hoop" },
+        { id: 0, name: "Khởi động & Cử điệu", time: 15, people: "600 người", props: "Loa kéo, Micro" },
+        { id: 7, name: "Tổng kết & Dọn dẹp", time: 15, people: "600 người", props: "Quà tặng, túi rác" }
+    ];
+
+    const logisticsList = [
+        { cat: "general", item: "9 Bao tải dứa cỡ lớn" },
+        { cat: "general", item: "30 Chóp nấm marker cones" },
+        { cat: "general", item: "Loa kéo & 2 Micro (Sạc đầy)" },
+        { cat: "general", item: "Hộp y tế (Băng gạc, xịt lạnh)" },
+        { cat: "general", item: "Bảng điểm A0 & Bút dạ" },
+        { cat: "combo", item: "1 Cuộn bạt bánh xe (Đã dán)" },
+        { cat: "combo", item: "2 Bao bố loại dày" },
+        { cat: "combo", item: "1 Thau bột & 1kg Bột mì" },
+        { cat: "combo", item: "30 Viên kẹo ngọc & 1 Rổ" },
+        { cat: "combo", item: "3 Vòng Hula hoop" },
+        { cat: "combo", item: "1 Tấm bạt nilon lót bột" }
+    ];
+
+    const executionSteps = [
+        { time: "07:00", title: "Setup hiện trường", desc: "Chia 9 làn bằng chóp nấm, rải 9 bao combo tại vạch xuất phát, lấy nước vào thau." },
+        { time: "09:00", title: "Warm-up (Phút 0-15)", desc: "Tập hợp 9 đội. Nhảy 2 bài Cử điệu Don Bosco sôi động. Phổ biến luật." },
+        { time: "09:15", title: "Bánh Xe Công Lý (Phút 15-30)", desc: "Thi tiếp sức đồng loạt 9 làn. 6 người/lượt." },
+        { time: "09:30", title: "Kéo Co (Phút 30-55)", desc: "Gom vòng tròn giữa sân. Đấu loại trực tiếp 8 trận. 15 người/đội." },
+        { time: "09:55", title: "Nhảy Bao Bố (Phút 55-65)", desc: "Trở lại 9 làn. 20 người/đội thi tiếp sức." },
+        { time: "10:05", title: "Truyền Nước (Phút 65-75)", desc: "Ngồi hàng dọc, truyền ly nước qua đầu đổ vào chai đích." },
+        { time: "10:15", title: "Tìm Ngọc (Phút 75-95)", desc: "Nhúng mặt nước, thổi bột lấy ngọc. Lưu ý rũ bột đúng bạt lót." },
+        { time: "10:35", title: "Chui Vòng (Phút 95-105)", desc: "Nắm tay toàn đội, luồn vòng Hula hoop không đứt quãng." },
+        { time: "10:45", title: "Tổng kết & Cảm ơn", desc: "Trao giải, nhảy bài Vòng tròn yêu thương. Nhặt rác toàn bộ sân bóng." }
+    ];
+
+    // Initialization
+    function init() {
+        renderGames();
+        renderLogistics();
+        renderTimeline();
+        initChart();
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+        
+        document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('tab-active'));
+        document.getElementById(`btn-${tabId}`).classList.add('tab-active');
+    }
+
+    function renderGames() {
+        const list = document.getElementById('gamesList');
+        gamesData.filter(g => g.id > 0).forEach(game => {
+            list.innerHTML += `
+                <div class="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border-l-4 border-amber-400">
+                    <div>
+                        <div class="font-bold text-gray-800">${game.name}</div>
+                        <div class="text-xs text-gray-400">${game.people}</div>
+                    </div>
+                    <div class="text-amber-600 font-bold">${game.time}p</div>
+                </div>
+            `;
+        });
+    }
+
+    function renderLogistics() {
+        const generalUl = document.getElementById('generalLogistics');
+        const comboUl = document.getElementById('comboLogistics');
+        
+        logisticsList.forEach(log => {
+            const li = `
+                <label class="flex items-center space-x-3 cursor-pointer p-1 hover:bg-gray-50 rounded">
+                    <input type="checkbox" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-gray-300">
+                    <span class="text-gray-700">${log.item}</span>
+                </label>
+            `;
+            if (log.cat === 'general') generalUl.innerHTML += li;
+            else comboUl.innerHTML += li;
+        });
+    }
+
+    function renderTimeline() {
+        const container = document.getElementById('executionTimeline');
+        executionSteps.forEach(step => {
+            container.innerHTML += `
+                <div class="relative timeline-step">
+                    <div class="absolute -left-11 mt-1 w-6 h-6 rounded-full bg-amber-500 border-4 border-white shadow-sm"></div>
+                    <div class="flex flex-col md:flex-row md:items-baseline md:space-x-4">
+                        <span class="text-sm font-bold text-amber-600 w-16">${step.time}</span>
+                        <div>
+                            <h4 class="font-bold text-gray-800">${step.title}</h4>
+                            <p class="text-sm text-gray-500 mt-1">${step.desc}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('timeDistributionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: gamesData.map(g => g.name),
+                datasets: [{
+                    data: gamesData.map(g => g.time),
+                    backgroundColor: [
+                        '#d97706', '#ea580c', '#c2410c', '#9a3412', '#7c2d12', '#451a03', '#f59e0b', '#fbbf24'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: { size: 10 },
+                            usePointStyle: true,
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: ${context.raw} phút`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
